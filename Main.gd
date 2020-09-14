@@ -18,6 +18,10 @@ var activePlayer = O
 var currentRound = 0
 var winner = false
 
+func ocurrio_un_error(_error):
+	# por ahora lo ignoramos
+	return null
+
 func _ready():
 	# Setup our playing board
 	for row in board:

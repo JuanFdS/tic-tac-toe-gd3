@@ -20,8 +20,9 @@ func create_client(user_created_room):
 	_client.connect("data_received", self, "_on_data")
 
 	# Initiate connection to the given URL.
-	var err = _client.connect_to_url("ws://tateti-websocket-server.herokuapp.com")
+	var err = _client.connect_to_url("wss://tateti-websocket-server.herokuapp.com")
 	if err != OK:
+		get_tree().get_root().get_node('Main').no_se_pudo_conectar()
 		print("Unable to connect")
 		set_process(false)
 	created_room = user_created_room
@@ -31,6 +32,8 @@ func _closed(was_clean = false):
 	# by the remote peer before closing the socket.
 	print("Closed, clean: ", was_clean)
 	connected = false
+	if(!was_clean):
+		get_tree().get_root().get_node('Main').no_se_pudo_conectar()
 
 func _connected(proto = ""):
 	# This is called on connection, "proto" will be the selected WebSocket
@@ -57,6 +60,8 @@ func _on_data():
 		if(mensaje["accion"] == "actualizarTablero"):
 			print(mensaje)
 			get_tree().get_root().get_node('Main').actualizarTablero(mensaje["tablero"], mensaje["jugadorActual"])
+	if(mensaje.has("error")):
+		get_tree().get_root().get_node('Main').ocurrio_un_error(mensaje["error"])
 
 func send(message):
 	message["codigo"] = room_code
