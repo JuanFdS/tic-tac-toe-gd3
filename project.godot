@@ -16,8 +16,12 @@ _global_script_class_icons={
 [application]
 
 config/name="Awesome Tic-Tac-Toe"
-run/main_scene="res://Main.tscn"
+run/main_scene="res://pruebaNetwork.tscn"
 config/icon="res://XGlow.png"
+
+[autoload]
+
+Cliente="*res://AutoLoads/Cliente.gd"
 
 [display]
 

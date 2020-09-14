@@ -13,7 +13,8 @@ onready var winDialog = $WinDialog
 const X = 1
 const O = 10
 
-var activePlayer = X
+var player = O
+var activePlayer = O
 var currentRound = 0
 var winner = false
 
@@ -28,6 +29,12 @@ func _ready():
 	cancelBtn.set_text("Quit")
 	cancelBtn.connect("pressed", self, "onQuit")
 	winDialog.get_ok().set_text("Play Again!")
+	if(Cliente.created_room):
+		player = O
+		avisarActualizacionTablero()
+	else:
+		player = X
+		pedirTablero()
 
 func clearBoard():
 	# Resets the game for a new round
@@ -66,13 +73,6 @@ func placeMark( row, col, player ):
 	#  2 - it's the next player turn
 	if currentRound == 9:
 		showWinDialog("Draw!!", "The game was a draw!")
-		
-	elif activePlayer == O and not winner:
-		# We use the tween to "fake" the computer thinking. I probably
-		# could have used a timer instead, but the interpolate_callback
-		# method makes it simple to provide a callback to the AI.
-		$Tween.interpolate_callback( self, 0.5 + randf(), "aiPicPoint" )
-		$Tween.start()
 
 func sumRow( rowNum ):
 	# Returns the sum of the supplied row
@@ -153,14 +153,43 @@ func checkWin():
 func onTicTacBtnPressed( button ):
 	# When a TicTacButton is pressed, it fires a signal
 	# We've registered to "respond" to that signal here.
-	if activePlayer == X:
-		print("Pressed (%d, %d)" % [button.row, button.col] )
-		
+	print("Pressed (%d, %d)" % [button.row, button.col] )
+	
+	if(player == activePlayer):
 		if board[button.row][button.col].value != 0:
 			print("Already filled")
 		else:
 			placeMark( button.row, button.col, activePlayer )
-		
+			avisarActualizacionTablero()
+
+func avisarActualizacionTablero():
+	Cliente.send({"accion": "actualizarTablero",
+				  "tablero": tableroSerializado(),
+				  "jugadorActual": activePlayer})
+
+func pedirTablero():
+	Cliente.send({"accion": "pedirTablero"})
+
+func tableroSerializado():
+	var serializedBoard=[]
+	for x in range(3):
+		serializedBoard.append([])
+		for y in range(3):
+			serializedBoard[x].append(board[x][y].value)
+	return serializedBoard
+
+func actualizarTablero(serializedBoard, jugadorActual):
+	for x in range(3):
+		for y in range(3):
+			var value = serializedBoard[x][y]
+			var cell = board[x][y]
+			if(value == X):
+				cell.setX(X)
+			elif(value == O):
+				cell.setO(O)
+			else:
+				cell.reset()
+	activePlayer = jugadorActual
 
 func aiFillRow( row ):
 	# AI tries to fill the supplied row with the first available
